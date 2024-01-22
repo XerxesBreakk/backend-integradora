@@ -77,7 +77,14 @@ WSGI_APPLICATION = 'access_system.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db(), #TODO Migrate to a MariaDB or MysqlDB
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': 'doraemon',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': 'db',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
+    }
 }
 
 

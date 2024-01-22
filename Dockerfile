@@ -1,26 +1,35 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.12.1
+# pull official base image
+FROM python:3.10-slim-buster
 
+# set work directory
+WORKDIR /usr/src/app
 
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
+# install mysql dependencies
+RUN apt-get update
+RUN apt-get install gcc default-libmysqlclient-dev -y
 
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
+# install dependencies
+RUN pip install -U pip setuptools wheel
+RUN pip install --upgrade pip
+COPY ./requirements.txt .
+RUN pip install -r requirements.txt --no-cache-dir
 
-WORKDIR /app
+# copy project
 COPY . .
 
+# Convert plain text files from Windows or Mac format to Unix
+RUN apt-get install dos2unix
+RUN dos2unix --newfile docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+# Make entrypoint executable
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-EXPOSE 8000
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "manage.py","runserver", "0.0.0.0:8000" ]
+# Entrypoint dependencies
+RUN apt-get install netcat -y
+
+# run entrypoint.sh
+ENTRYPOINT ["bash", "/usr/local/bin/docker-entrypoint.sh"]
